@@ -1,0 +1,31 @@
+"use server";
+
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
+
+export async function completeOnboarding(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect("/login");
+  }
+
+  const name = formData.get("companyName") as string;
+  const pan = formData.get("pan") as string;
+  const state = formData.get("state") as string;
+
+  const { error } = await supabase.from("companies").insert({
+    owner_id: user.id,
+    name,
+    pan,
+    state,
+  });
+
+  if (error) {
+    console.error("Onboarding Error:", error);
+    return redirect(`/onboarding?message=${encodeURIComponent("Failed to create company profile")}`);
+  }
+
+  redirect("/employees");
+}

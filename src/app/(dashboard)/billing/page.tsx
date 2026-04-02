@@ -1,8 +1,39 @@
+import { createClient } from "@/utils/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, CreditCard } from "lucide-react";
 
-export default function BillingPage() {
+export default async function BillingPage() {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+
+  let remainingRuns = 2; // Default starting runs
+
+  try {
+    if (userData?.user) {
+      const { data: company } = await supabase
+        .from("companies")
+        .select("id")
+        .eq("owner_id", userData.user.id)
+        .single();
+
+      if (company) {
+        const { count } = await supabase
+          .from("payroll_runs")
+          .select("*", { count: "exact", head: true })
+          .eq("company_id", company.id);
+        
+        if (count !== null) {
+          remainingRuns = Math.max(0, 2 - count);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Failed to fetch billing stats", err);
+  }
+
+  const progressPercentage = ((2 - remainingRuns) / 2) * 100;
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div>
@@ -23,10 +54,10 @@ export default function BillingPage() {
             <div className="rounded-md bg-muted p-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Payroll Runs Remaining</span>
-                <span className="text-2xl font-bold text-primary">2</span>
+                <span className="text-2xl font-bold text-primary">{remainingRuns}</span>
               </div>
               <div className="mt-2 w-full bg-secondary h-2 rounded-full overflow-hidden">
-                <div className="bg-primary h-full" style={{ width: '0%' }}></div>
+                <div className="bg-primary h-full transition-all duration-500" style={{ width: `${progressPercentage}%` }}></div>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
                 You have 2 free payroll runs included. Upgrade to continue running payroll seamlessly.
@@ -42,7 +73,7 @@ export default function BillingPage() {
           </div>
           <CardHeader>
             <CardTitle className="text-2xl">Pro Plan</CardTitle>
-            <CardDescription>Unlimited payroll runs for Indian businesses (< 10 employees).</CardDescription>
+            <CardDescription>Unlimited payroll runs for Indian businesses (&lt; 10 employees).</CardDescription>
             <div className="mt-4 flex items-baseline text-4xl font-extrabold">
               ₹999
               <span className="ml-1 text-xl font-medium text-muted-foreground">/mo</span>

@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VetanLite: Micro-Payroll SaaS
 
-## Getting Started
+**VetanLite** is a highly efficient, automated micro-payroll SaaS tailored specifically for Indian businesses with fewer than 10 employees. It focuses strictly on automatic tax/statutory calculations and PDF payslip generation, eliminating the bloat of enterprise payroll software and offering true 1-click processing for tiny teams.
 
-First, run the development server:
+## The Problem It Solves
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Small businesses spend hours each month manually calculating employee salaries, factoring in variable elements like paid leave, unpaid absences (Loss of Pay), overtime hours, and festival bonuses. Traditional payroll software is designed for larger organizations and doesn't offer a simple spreadsheet-like grid for immediate 1-click execution. 
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+VetanLite provides a tabular, instant-calculation interface where variables can be plugged in, instantly updating PF, PT, and TDS obligations before finalizing and auto-generating compliant PDF payslips.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tech Stack
+- **Frontend & Backend**: Next.js (App Router, React 19)
+- **Database & Auth**: Supabase (PostgreSQL, Supabase Auth)
+- **Styling**: Tailwind CSS + Shadcn UI
+- **PDF Generation**: `@react-pdf/renderer` purely server-side
+- **Email Delivery**: Resend API
+- **Payments**: Razorpay Subscriptions (Future)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Setup & Running Locally
 
-## Learn More
+1. **Clone and Install**
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Environment Variables**
+   Create a `.env.local` file in the root directory and add your Supabase and Resend keys:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   RESEND_API_KEY=your_resend_key
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Database Initialization**
+   Apply the SQL migration file located in `supabase/migrations/0000_initial_schema.sql` via the Supabase SQL Editor to set up the `companies`, `employees`, `payroll_runs`, and `payslips` tables.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Start the Development Server**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Deploy on Vercel
+## Current Project Status
+- ✅ Scaffolding & Routing setup (Auth, Dashboard, Payroll flows)
+- ✅ Indian Tax Engine Logic & Test coverage (PF, PT, TDS)
+- ✅ Live Data-Grid UI for instant salary calculations
+- ⚠️ Employee Management Forms integration pending
+- ⚠️ Payroll Finalization (DB writes & PDF generation) pending
+- ⚠️ Razorpay integration pending
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Built beautifully with Next.js & Tailwind CSS.**

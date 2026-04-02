@@ -9,7 +9,6 @@ export default async function PayrollPage() {
     const { data: userData } = await supabase.auth.getUser();
 
     if (userData.user) {
-      // Get the user's company
       const { data: company } = await supabase
         .from('companies')
         .select('id')
@@ -17,14 +16,14 @@ export default async function PayrollPage() {
         .single();
 
       if (company) {
-        // Get employees
         const { data: emps } = await supabase
           .from('employees')
           .select('*')
-          .eq('company_id', company.id);
+          .eq('company_id', company.id)
+          .order('name');
 
         if (emps) {
-          employees = emps.map(emp => ({
+          employees = emps.map((emp: any) => ({
             id: emp.id,
             name: emp.name,
             annualGrossSalary: Number(emp.annual_gross_salary),
@@ -38,37 +37,15 @@ export default async function PayrollPage() {
       }
     }
   } catch (error) {
-    // Supabase likely not connected. Fallback to dummy data for demonstration.
-    employees = [
-      {
-        id: "1",
-        name: "Ramesh Kumar",
-        annualGrossSalary: 1200000,
-        state: "Maharashtra",
-        taxRegime: "NEW",
-        pfOptIn: true,
-      },
-      {
-        id: "2",
-        name: "Priya Sharma",
-        annualGrossSalary: 850000,
-        state: "Karnataka",
-        taxRegime: "OLD",
-        pfOptIn: false,
-        sec80C: 150000,
-      }
-    ];
+    console.error("Error fetching employees for payroll:", error);
   }
-
-  // If we have an empty array (DB connected but no users), we don't mock.
-  // The catch block specifically handles the "Missing Supabase URL/Key" errors.
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Payroll Runs</h1>
         <p className="text-muted-foreground">
-          Calculate, finalize, and distribute payslips.
+          Calculate, finalize, and securely store payslips in the database.
         </p>
       </div>
 

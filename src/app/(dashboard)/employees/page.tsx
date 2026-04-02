@@ -1,7 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus } from "lucide-react";
+import { AddEmployeeModal } from "@/components/employees/AddEmployeeModal";
 
 export default async function EmployeesPage() {
   const supabase = await createClient();
@@ -10,18 +9,26 @@ export default async function EmployeesPage() {
   try {
     const { data: userData } = await supabase.auth.getUser();
     if (userData.user) {
-      const { data: company } = await supabase.from('companies').select('id').eq('owner_id', userData.user.id).single();
+      const { data: company } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('owner_id', userData.user.id)
+        .single();
+
       if (company) {
-        const { data: emps } = await supabase.from('employees').select('*').eq('company_id', company.id);
-        if (emps) employees = emps;
+        const { data: emps } = await supabase
+          .from('employees')
+          .select('*')
+          .eq('company_id', company.id)
+          .order('created_at', { ascending: false });
+
+        if (emps) {
+          employees = emps;
+        }
       }
     }
   } catch (error) {
-    // Fallback for demonstration without DB keys
-    employees = [
-      { id: "1", name: "Ramesh Kumar", email: "ramesh@example.com", annual_gross_salary: 1200000, state: "Maharashtra", tax_regime: "NEW", pf_opt_in: true },
-      { id: "2", name: "Priya Sharma", email: "priya@example.com", annual_gross_salary: 850000, state: "Karnataka", tax_regime: "OLD", pf_opt_in: false }
-    ];
+    console.error("Failed to fetch employees:", error);
   }
 
   return (
@@ -33,9 +40,7 @@ export default async function EmployeesPage() {
             Manage your workforce and tax details.
           </p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Add Employee
-        </Button>
+        <AddEmployeeModal />
       </div>
 
       <div className="border rounded-md bg-card">
@@ -54,7 +59,7 @@ export default async function EmployeesPage() {
             {employees.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  No employees found.
+                  No employees found. Click "Add Employee" to get started.
                 </TableCell>
               </TableRow>
             ) : (
