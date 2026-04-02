@@ -4,6 +4,7 @@ import { PayrollGrid, PayrollEmployee } from "@/components/payroll/PayrollGrid";
 export default async function PayrollPage() {
   const supabase = await createClient();
   let employees: PayrollEmployee[] = [];
+  let companyConfig = undefined;
 
   try {
     const { data: userData } = await supabase.auth.getUser();
@@ -11,11 +12,15 @@ export default async function PayrollPage() {
     if (userData.user) {
       const { data: company } = await supabase
         .from('companies')
-        .select('id')
+        .select('id, payroll_config')
         .eq('owner_id', userData.user.id)
         .single();
 
       if (company) {
+        if (company.payroll_config) {
+          companyConfig = company.payroll_config;
+        }
+
         const { data: emps } = await supabase
           .from('employees')
           .select('*')
@@ -49,7 +54,7 @@ export default async function PayrollPage() {
         </p>
       </div>
 
-      <PayrollGrid employees={employees} />
+      <PayrollGrid employees={employees} companyConfig={companyConfig} />
     </div>
   );
 }

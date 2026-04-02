@@ -14,24 +14,36 @@ export interface MonthlyVariables {
   overtimeHours?: number;
   bonus?: number;
   deduction?: number;
-  workingDaysInMonth?: number; // default 30
 }
 
+export interface CompanyConfig {
+  basicPercentage: number; // e.g. 50
+  hraPercentage: number;   // e.g. 50
+  enablePf: boolean;
+  enablePt: boolean;
+  workingDays: number;
+}
+
+const DEFAULT_CONFIG: CompanyConfig = {
+  basicPercentage: 50,
+  hraPercentage: 50,
+  enablePf: true,
+  enablePt: true,
+  workingDays: 30,
+};
+
 /**
- * Calculates standard salary components from Annual Gross.
- * Basic = 50%, HRA = 25%, Special = 25%
+ * Calculates standard salary components from Annual Gross and Config.
  */
-export function calculateSalaryStructure(annualGross: number) {
-  const basic = annualGross * 0.5;
-  const hra = basic * 0.5; // 25% of gross
-  const specialAllowance = annualGross - basic - hra; // 25% of gross
+export function calculateSalaryStructure(annualGross: number, config: CompanyConfig = DEFAULT_CONFIG) {
+  const basic = annualGross * (config.basicPercentage / 100);
+  const hra = basic * (config.hraPercentage / 100); 
+  const specialAllowance = annualGross - basic - hra;
   return { basic, hra, specialAllowance };
 }
 
 /**
  * Calculates annual tax based on chosen regime.
- * Old Regime: Standard Deduction ₹50,000 + 80C + 80D
- * New Regime (April 2026): Standard Deduction ₹75,000
  */
 export function calculateAnnualTax(input: EmployeeSalaryInput): number {
   const { annualGrossSalary, taxRegime, sec80C = 0, sec80D = 0 } = input;
@@ -69,7 +81,8 @@ export function calculateAnnualTax(input: EmployeeSalaryInput): number {
 /**
  * Calculates Professional Tax based on state.
  */
-export function calculatePT(state: string, monthlyGross: number): number {
+export function calculatePT(state: string, monthlyGross: number, config: CompanyConfig = DEFAULT_CONFIG): number {
+  if (!config.enablePt) return 0;
   const s = state.toLowerCase();
   if (s.includes("maharashtra")) return 200;
   if (s.includes("karnataka")) return monthlyGross >= 15000 ? 200 : 0;
@@ -83,17 +96,19 @@ export function calculatePT(state: string, monthlyGross: number): number {
  */
 export function runMonthlyPayroll(
   employee: EmployeeSalaryInput,
-  variables: MonthlyVariables = {}
+  variables: MonthlyVariables = {},
+  config: CompanyConfig = DEFAULT_CONFIG
 ) {
   const {
     lopDays = 0,
     overtimeHours = 0,
     bonus = 0,
     deduction = 0,
-    workingDaysInMonth = 30,
   } = variables;
 
-  const annual = calculateSalaryStructure(employee.annualGrossSalary);
+  const workingDaysInMonth = config.workingDays || 30;
+
+  const annual = calculateSalaryStructure(employee.annualGrossSalary, config);
   const monthlyGross = employee.annualGrossSalary / 12;
 
   // Monthly breakdown
@@ -113,13 +128,12 @@ export function runMonthlyPayroll(
 
   // 4. Statutory Deductions
   let pfDeducted = 0;
-  if (employee.pfOptIn) {
-    // PF is 12% of basic (adjusted for LOP if we want strictly accurate, but let's base on adjusted basic)
+  if (config.enablePf && employee.pfOptIn) {
     const adjustedBasicMonthly = basicMonthly - ((basicMonthly / workingDaysInMonth) * lopDays);
     pfDeducted = adjustedBasicMonthly * 0.12;
   }
 
-  const ptDeducted = calculatePT(employee.state, totalEarnings);
+  const ptDeducted = calculatePT(employee.state, totalEarnings, config);
 
   // TDS is annualized divided by 12.
   const annualTax = calculateAnnualTax(employee);

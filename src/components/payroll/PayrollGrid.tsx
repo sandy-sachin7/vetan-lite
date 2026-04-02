@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { runMonthlyPayroll, EmployeeSalaryInput, MonthlyVariables } from "@/utils/taxEngine";
+import { runMonthlyPayroll, EmployeeSalaryInput, MonthlyVariables, CompanyConfig } from "@/utils/taxEngine";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,10 @@ export type PayrollEmployee = EmployeeSalaryInput & {
 
 interface PayrollGridProps {
   employees: PayrollEmployee[];
+  companyConfig?: CompanyConfig;
 }
 
-export function PayrollGrid({ employees }: PayrollGridProps) {
+export function PayrollGrid({ employees, companyConfig }: PayrollGridProps) {
   const [variables, setVariables] = useState<Record<string, MonthlyVariables>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [showBillingWall, setShowBillingWall] = useState(false);
@@ -43,7 +44,7 @@ export function PayrollGrid({ employees }: PayrollGridProps) {
     try {
       const payslips = employees.map(emp => {
         const vars = variables[emp.id] || {};
-        const calc = runMonthlyPayroll(emp, vars);
+        const calc = runMonthlyPayroll(emp, vars, companyConfig);
         return {
           employee_id: emp.id,
           lop_days: vars.lopDays || 0,
@@ -77,7 +78,7 @@ export function PayrollGrid({ employees }: PayrollGridProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center bg-white dark:bg-zinc-900 p-4 rounded-md border">
+      <div className="flex justify-between items-center bg-white dark:bg-zinc-900/50 p-4 rounded-md border backdrop-blur">
         <div className="flex gap-4 items-center">
           <h2 className="text-xl font-semibold">Payroll Run Details</h2>
           <div className="flex gap-2 items-center ml-4">
@@ -129,7 +130,7 @@ export function PayrollGrid({ employees }: PayrollGridProps) {
             ) : (
               employees.map((emp) => {
                 const vars = variables[emp.id] || {};
-                const calc = runMonthlyPayroll(emp, vars);
+                const calc = runMonthlyPayroll(emp, vars, companyConfig);
 
                 return (
                   <TableRow key={emp.id}>
@@ -140,7 +141,7 @@ export function PayrollGrid({ employees }: PayrollGridProps) {
                         type="number"
                         min="0"
                         step="0.5"
-                        className="h-8 w-16"
+                        className="h-8 w-16 bg-white/5 dark:bg-white/5"
                         value={vars.lopDays || ""}
                         onChange={(e) => handleVariableChange(emp.id, "lopDays", e.target.value)}
                       />
@@ -149,7 +150,7 @@ export function PayrollGrid({ employees }: PayrollGridProps) {
                       <Input
                         type="number"
                         min="0"
-                        className="h-8 w-16"
+                        className="h-8 w-16 bg-white/5 dark:bg-white/5"
                         value={vars.overtimeHours || ""}
                         onChange={(e) => handleVariableChange(emp.id, "overtimeHours", e.target.value)}
                       />
@@ -158,7 +159,7 @@ export function PayrollGrid({ employees }: PayrollGridProps) {
                       <Input
                         type="number"
                         min="0"
-                        className="h-8 w-20"
+                        className="h-8 w-20 bg-white/5 dark:bg-white/5"
                         value={vars.bonus || ""}
                         onChange={(e) => handleVariableChange(emp.id, "bonus", e.target.value)}
                       />
@@ -167,15 +168,15 @@ export function PayrollGrid({ employees }: PayrollGridProps) {
                       <Input
                         type="number"
                         min="0"
-                        className="h-8 w-20"
+                        className="h-8 w-20 bg-white/5 dark:bg-white/5"
                         value={vars.deduction || ""}
                         onChange={(e) => handleVariableChange(emp.id, "deduction", e.target.value)}
                       />
                     </TableCell>
-                    <TableCell className="text-red-600">-{Math.round(calc.pf_deducted)}</TableCell>
-                    <TableCell className="text-red-600">-{Math.round(calc.pt_deducted)}</TableCell>
-                    <TableCell className="text-red-600">-{Math.round(calc.tds_deducted)}</TableCell>
-                    <TableCell className="text-right font-bold text-green-600">
+                    <TableCell className="text-red-500 font-medium">-{Math.round(calc.pf_deducted)}</TableCell>
+                    <TableCell className="text-red-500 font-medium">-{Math.round(calc.pt_deducted)}</TableCell>
+                    <TableCell className="text-red-500 font-medium">-{Math.round(calc.tds_deducted)}</TableCell>
+                    <TableCell className="text-right font-bold text-green-500">
                       ₹{Math.round(calc.net_pay).toLocaleString()}
                     </TableCell>
                   </TableRow>
@@ -207,7 +208,7 @@ export function PayrollGrid({ employees }: PayrollGridProps) {
               Cancel
             </DialogClose>
             <a href="https://razorpay.com/" target="_blank" rel="noopener noreferrer">
-              <Button type="button" className="bg-purple-600 hover:bg-purple-700">
+              <Button type="button" className="bg-primary hover:opacity-90">
                 Upgrade Now
               </Button>
             </a>
