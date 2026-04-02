@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { logger } from "@/utils/logger";
 
 let resend: Resend | null = null;
 if (process.env.RESEND_API_KEY) {
@@ -13,7 +14,7 @@ export async function sendPayslipEmail(
   pdfBuffer: Buffer
 ) {
   if (!resend) {
-    console.warn("RESEND_API_KEY not found. Skipping email sending for:", toEmail);
+    logger.warn({ toEmail }, "RESEND_API_KEY not found. Skipping email sending.");
     return;
   }
 
@@ -31,7 +32,7 @@ export async function sendPayslipEmail(
   });
 
   if (result.error) {
-    console.error("Resend error:", result.error);
+    logger.error({ err: result.error }, "Resend error");
     throw new Error(result.error.message);
   }
 

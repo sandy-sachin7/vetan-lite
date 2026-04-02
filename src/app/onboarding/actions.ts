@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import { logger } from "@/utils/logger";
 
 export async function completeOnboarding(formData: FormData) {
   const supabase = await createClient();
@@ -23,7 +24,7 @@ export async function completeOnboarding(formData: FormData) {
   });
 
   if (error) {
-    console.error("Onboarding Error:", error);
+    logger.error({ err: error }, "Onboarding Error");
     return redirect(`/onboarding?message=${encodeURIComponent("Failed to create company profile")}`);
   }
 

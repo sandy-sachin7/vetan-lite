@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/utils/logger";
 
 export async function addEmployee(formData: FormData) {
   const supabase = await createClient();
@@ -43,7 +44,7 @@ export async function addEmployee(formData: FormData) {
   });
 
   if (error) {
-    console.error("Error inserting employee:", error);
+    logger.error({ err: error }, "Error inserting employee");
     throw new Error(error.message);
   }
 

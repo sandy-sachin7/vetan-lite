@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { generatePayslipPdfBuffer } from "@/utils/pdfGenerator";
 import { sendPayslipEmail } from "@/utils/emailSender";
+import { logger } from "@/utils/logger";
 
 export async function finalizePayrollRun(month: number, year: number, payslips: any[]) {
   const supabase = await createClient();
@@ -63,7 +64,7 @@ export async function finalizePayrollRun(month: number, year: number, payslips: 
     .single();
 
   if (runError || !run) {
-    console.error("Error creating payroll run:", runError);
+    logger.error({ err: runError }, "Error creating payroll run");
     throw new Error("Failed to create payroll run");
   }
 
@@ -91,7 +92,7 @@ export async function finalizePayrollRun(month: number, year: number, payslips: 
     .select("*");
 
   if (payslipsError) {
-    console.error("Error inserting payslips:", payslipsError);
+    logger.error({ err: payslipsError }, "Error inserting payslips");
     throw new Error("Failed to insert payslip records");
   }
 
@@ -131,7 +132,7 @@ export async function finalizePayrollRun(month: number, year: number, payslips: 
 
           await sendPayslipEmail(emp.email, emp.name, month, year, pdfBuffer);
         } catch (err: any) {
-          console.error(`Failed to generate/send payslip for ${emp.email}:`, err);
+          logger.error({ err, employeeEmail: emp.email }, "Failed to generate/send payslip");
         }
       })
     );

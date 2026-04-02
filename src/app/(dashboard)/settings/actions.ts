@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/utils/logger";
 
 export async function updateCompanySettings(formData: FormData) {
   const supabase = await createClient();
@@ -45,7 +46,7 @@ export async function updateCompanySettings(formData: FormData) {
     .eq("id", company.id);
 
   if (updateError) {
-    console.error("Error updating settings:", updateError);
+    logger.error({ err: updateError }, "Error updating settings");
     return { error: "Failed to update settings" };
   }
 
