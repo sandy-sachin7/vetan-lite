@@ -17,36 +17,43 @@ export default async function DashboardPage() {
         .single();
 
       if (company) {
-        // 1. Employee Count
-        const { count: emps } = await supabase
-          .from("employees")
-          .select("*", { count: "exact", head: true })
-          .eq("company_id", company.id);
-        if (emps) employeeCount = emps;
+        // Run all queries concurrently using Promise.all
+        const [empsPromise, lastRunPromise, runsPromise] = await Promise.all([
+          // 1. Employee Count
+          supabase
+            .from("employees")
+            .select("*", { count: "exact", head: true })
+            .eq("company_id", company.id),
+          
+          // 2. Last Payroll Run
+          supabase
+            .from("payroll_runs")
+            .select("month, year")
+            .eq("company_id", company.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single(),
+            
+          // 3. Tax Deducted YTD (Fetch runs list)
+          supabase
+            .from("payroll_runs")
+            .select("id")
+            .eq("company_id", company.id)
+        ]);
 
-        // 2. Last Payroll Run
-        const { data: lastRun } = await supabase
-          .from("payroll_runs")
-          .select("month, year")
-          .eq("company_id", company.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
+        if (empsPromise.count !== null) {
+          employeeCount = empsPromise.count;
+        }
 
-        if (lastRun) {
+        if (lastRunPromise.data) {
+          const lastRun = lastRunPromise.data;
           lastRunLabel = `${new Date(0, lastRun.month - 1).toLocaleString("default", {
             month: "long",
           })} ${lastRun.year}`;
         }
 
-        // 3. Tax Deducted YTD
-        const { data: runs } = await supabase
-          .from("payroll_runs")
-          .select("id")
-          .eq("company_id", company.id);
-
-        if (runs && runs.length > 0) {
-          const runIds = runs.map((r) => r.id);
+        if (runsPromise.data && runsPromise.data.length > 0) {
+          const runIds = runsPromise.data.map((r) => r.id);
           const { data: payslips } = await supabase
             .from("payslips")
             .select("tds_deducted, pt_deducted")

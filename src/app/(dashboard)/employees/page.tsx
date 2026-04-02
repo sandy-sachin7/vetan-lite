@@ -9,22 +9,18 @@ export default async function EmployeesPage() {
   try {
     const { data: userData } = await supabase.auth.getUser();
     if (userData.user) {
-      const { data: company } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('owner_id', userData.user.id)
-        .single();
+      // 🚀 Performance Upgrade: Use inner join to fetch directly without needing to query `company` table first!
+      const { data: emps } = await supabase
+        .from('employees')
+        .select(`
+          *,
+          companies!inner (id, owner_id)
+        `)
+        .eq('companies.owner_id', userData.user.id)
+        .order('created_at', { ascending: false });
 
-      if (company) {
-        const { data: emps } = await supabase
-          .from('employees')
-          .select('*')
-          .eq('company_id', company.id)
-          .order('created_at', { ascending: false });
-
-        if (emps) {
-          employees = emps;
-        }
+      if (emps) {
+        employees = emps;
       }
     }
   } catch (error) {
