@@ -78,10 +78,10 @@ export function PayrollGrid({ employees, companyConfig }: PayrollGridProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center bg-white dark:bg-zinc-900/50 p-4 rounded-md border backdrop-blur">
-        <div className="flex gap-4 items-center">
+      <div className="flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center bg-white dark:bg-zinc-900/50 p-4 rounded-md border backdrop-blur">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
           <h2 className="text-xl font-semibold">Payroll Run Details</h2>
-          <div className="flex gap-2 items-center ml-4">
+          <div className="flex gap-2 items-center sm:ml-4">
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}

@@ -8,6 +8,7 @@ import {
   CreditCard
 } from "lucide-react";
 import { logout } from "@/app/auth/actions";
+import { MobileSidebar } from "@/components/layout/MobileSidebar";
 
 export default function DashboardLayout({
   children,
@@ -15,7 +16,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950 flex-col md:flex-row">
+      <MobileSidebar logoutAction={logout} />
+      
       {/* Sidebar */}
       <aside className="hidden w-64 flex-col border-r bg-white dark:bg-zinc-900 md:flex">
         <div className="flex h-16 items-center border-b px-6">
@@ -54,7 +57,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-8">
+      <main className="flex-1 overflow-y-auto p-4 md:p-8">
         {children}
       </main>
     </div>
